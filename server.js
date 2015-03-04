@@ -1,10 +1,12 @@
-Error.stackTraceLimit = Infinity;
-
-var fs = require("fs");
+/* Global Variables
+---------------------------------------------- */
 var port = 8000;
-var cacheUpdateTime = 60000;
+var cacheUpdateTime = 60 * 1000; // 1 minute
+var voteCooldown = 24 * 60 * 60 * 1000; // 24 hours
+var postCooldown = 2 * 60 * 1000; // 2 minutes
 
-// Retrieve
+/* Database setup
+---------------------------------------------- */
 var mongo = require('mongodb'),
   MongoClient = mongo.MongoClient,
   BSON = mongo.BSONPure;
@@ -16,7 +18,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   }
   console.log("Connected to DB.")
 
-  //Set up the app
+  /* App setup and local variables
+  ---------------------------------------------- */
   var express = require('express'),
       bodyParser = require('body-parser'),
       app = express(),
@@ -26,24 +29,26 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
       lunr = require('lunr');
   app.locals = {};
   app.locals.db = db;
+  app.locals.userHistory = {};
   app.use(express.static(__dirname + '/public_html'));
   app.use(bodyParser.urlencoded({extended:false}));
 
-  //Gets called after pastas are cached.
-  var bootstrap = function(){
-    //bootstrap the app
-    app.listen(port);
-    console.log("Listening on port "+port);
-  }
 
-
-  /* Adding needed native methods
+  /* Adding needed methods
   ---------------------------------------------- */
 
+  /* Gets all documents in the lunr cache
+   *
+   * returns: object
+   */
   lunr.Store.prototype.getAll = function () {
     return this.store;
   }
 
+  /* Removes all documents in the lunr index
+   *
+   * arguments: boolean emitEvent
+   */
   lunr.Index.prototype.removeAll = function (emitEvent) {
     var emitEvent = emitEvent === undefined ? true : emitEvent
 
@@ -61,7 +66,12 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   /* Setting up Cache
   ---------------------------------------------- */
 
-  var updateCache = function(callback){
+  /* Updates the cache
+   *
+   * arguments: function callback
+   *
+   */
+  var updatePastaCache = function(callback){
     app.locals.db.collection("pastas").find().sort({ points: -1 } ).toArray(function(err, pastas){
       app.locals.pastas = pastas;
       app.locals.idx.removeAll();
@@ -77,6 +87,25 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
     });
   }
 
+  /* Cleans the userhistory so we are not keeping more data in memory than we need.
+   * All expired actions and empty userhistories are deleted.
+   */
+  var cleanUserHistory = function(){
+    var now = (+new Date());
+    _.each(app.locals.userHistory, function(history, ip){
+      _.each(history, function(action, index){
+        //The action cooldown has ended
+        if((action.name==="Vote" && action.time + voteCooldown < now) ||
+           (action.name==="Post" && action.time + postCooldown < now)){
+          delete app.locals.userHistory[ip][index];
+        }
+      });
+      if(history.length===0){
+        delete app.locals.userHistory[ip];
+      }
+    });
+  }
+
   app.locals.idx = lunr(function(){
     this.field('_id');
     this.field('title', {boost: 30});
@@ -87,14 +116,18 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   app.locals.storage = lunr.Store
 
   var cacheUpdateTimer = setInterval(function(){
-    updateCache();
+    updatePastaCache();
+    cleanUserHistory();
   }, cacheUpdateTime);
 
-  updateCache(bootstrap);
+  updatePastaCache(function(){
+    //bootstrap the app
+    app.listen(port);
+    console.log("Listening on port "+port);
+  });
 
   /* Rendering
   ---------------------------------------------- */
-  //Set up rendering
   render.init({
       render_engine: 'underscore'
     , template_type: 'html'
@@ -111,23 +144,20 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   /* Router
   ---------------------------------------------- */
-
   // route middleware that will happen on every request
   router.use(function(req, res, next) {
     res.status(200);
-    console.log(req.method, req.url);
-    next(); 
+    next();
   });
 
-  // route middleware to validate :query
+  // route middleware to get :query
   router.param('query', function(req, res, next, query) {
-    //console.log('Asked for query: ' + query);
     req.query = query;
-    next(); 
+    next();
   });
 
   router.get('/api/stats', function(req, res) {
-    getStats(app.locals.db, function(stats){
+    getStats(app, function(stats){
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(stats));
     });
@@ -142,7 +172,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   router.post('/api/pasta/:query', function(req, res) {
     req.body._id = req.query;
-    updatePasta(app.locals.db, req.body, function(result){
+    updatePasta(app, req.body, req.client.remoteAddress, function(result){
       if(result===false){
         result = "An error occured.";
       }
@@ -152,7 +182,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   });
 
   router.post('/api/pasta/', function(req, res) {
-    putPasta(app.locals.db, req.body, function(err, result){
+    putPasta(app, req.body, req.client.remoteAddress, function(err, result){
       res.setHeader('Content-Type', 'application/json');
       if(err){
         res.status(401);
@@ -167,11 +197,11 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   router.all('/:query', function(req, res) {
     getPasta(app, req.query, function(pastas){
       var locals = {title: "Pastamaker: "+req.query, pastas: pastas, query: req.query};
-      res.render('index.html', 
-                { stylesheets: stylesheets, scripts: scripts, locals: locals}, 
-                function(err,str) { 
+      res.render('index.html',
+                { stylesheets: stylesheets, scripts: scripts, locals: locals},
+                function(err,str) {
                   if(!err){
-                    res.send(str); 
+                    res.send(str);
                   }
                   else{
                     console.log(err);
@@ -183,11 +213,11 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   router.all('/', function(req, res) {
     var locals = {title: "Pastamaker"};
-    res.render('index.html', 
-              { stylesheets: stylesheets, scripts: scripts, locals: locals}, 
-              function(err,str) { 
+    res.render('index.html',
+              { stylesheets: stylesheets, scripts: scripts, locals: locals},
+              function(err,str) {
                 if(!err){
-                  res.send(str); 
+                  res.send(str);
                 }
                 else{
                   console.log(err);
@@ -198,11 +228,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   // apply the routes to our application
   app.use('/', router);
 
-  app.use(function(req,res) { 
-    /*res.render('404', 
-               { locals: {'title':'Not Found'}, }, 
-               function(err,str) { res.status(404).send(str); } );*/
-    res.status(404).send("404");
+  app.use(function(req,res) {
+    res.status(404).send("404 Not Found");
   });
 
 
@@ -219,12 +246,30 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
            .replace(/"/g, "&quot;")
            .replace(/'/g, "&#039;");
    }
-  var putPasta = function(db, pasta, callback){
-    if(typeof pasta.title==="string" && typeof pasta.text==="string" && pasta.title.length>0 && pasta.text.length>0){
+
+  /* Functions
+  ---------------------------------------------- */
+
+  /* Inserts a new pasta into the database
+   *
+   * arguments: object app, object pasta, string ip, function callback
+   */
+  var putPasta = function(app, pasta, ip, callback){
+    var db = app.locals.db;
+    if(!allowedToPost(app, ip)){
+      callback(["Please wait "+(postCooldown/1000)+" seconds between posting."], false);
+    }
+    else if( typeof pasta.title!=="string"
+          || typeof pasta.text!=="string"
+          || pasta.title.length===0
+          || pasta.text.length===0
+          ){
+      callback(["Title and/or text invalid."], false);
+    }
+    else{
       var collection = db.collection("pastas");
-      //var titleRe = new RegExp("^"+escapeRegExp(pasta.title)+"$", "gi");
       var textRe = new RegExp("^"+escapeRegExp(pasta.text)+"$", "gi");
-      var filter = {/*$or: [ { title: titleRe }, { text: textRe } ] */ text: textRe };
+      var filter = { text: textRe };
       collection.find( filter ).toArray(function(err, pastas){
         if(err){
           console.log(err);
@@ -240,45 +285,68 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
           if(typeof pasta.tags!=="string" || pasta.tags.length<1)
             {pasta.tags = ""}
           var doc = {
-            "title": pasta.title, 
-            "text": pasta.text, 
+            "title": pasta.title,
+            "text": pasta.text,
             "tags": pasta.tags,
             "fontstack": pasta.fontstack,
-            "points": 0};
-            console.log(doc);
-          collection.insert(doc, callback);
+            "points": 0,
+            "ip": ip};
+          collection.insert(doc, function(err, result){
+            addUserHistory(app, ip, "Post", pasta.text);
+            callback(err, result);
+          });
         }
       });
     }
-    else{
-      callback(["Title and/or text invalid."], false);
-    }
   }
+
+  /* Gets pasta from cache
+   *
+   * arguments: object app, string query, function callback
+   */
   var getPasta = function(app, query, callback){
     var limit = 10 + 3*(query.length-1)*(query.length-1);
     var pastas = app.locals.idx.search(query).map(function (resultPasta) {
       return app.locals.pastas.filter(function (pasta) {
-        return pasta._id+"" === resultPasta.ref; 
+        return pasta._id+"" === resultPasta.ref;
       })[0];
     });
     callback(pastas.slice(0, limit));
   }
-  var updatePasta = function(db, params, callback){
+
+  /* Updates the votecount of a pasta
+   *
+   * arguments: object app, object params, string ip, function callback
+   */
+  var updatePasta = function(app, params, ip, callback){
+    var db = app.locals.db;
     var collection = db.collection("pastas");
     var pointsToAdd = params.action==="like" ? 1 : -1;
     var update = {$inc: { points: pointsToAdd }};
     var filter = { _id: new BSON.ObjectID(params._id) };
-    collection.update(filter, update, function(err, result){
-      if(!err){
-        callback("Updated successfully");
-      }
-      else{
-        console.log(err);
-        callback(false);
-      }
-    });
+    if(allowedToVote(app, ip, "Vote", params._id)){
+      collection.update(filter, update, function(err, result){
+        if(!err){
+          addUserHistory(app, ip, "Vote", params._id);
+          callback("Updated successfully");
+        }
+        else{
+          console.log(err);
+          callback(false);
+        }
+      });
+    }
+    else{
+      callback(false);
+    }
   }
-  var getStats = function(db, callback){
+
+  /* Gets pastamaker stats
+   *
+   * arguments: object app, function callback
+   */
+  var getStats = function(app, callback){
+    var db = app.locals.db;
     var collection = db.collection("pastas");
     collection.find( {} ).sort( { points: -1 } ).toArray(function(err, pastas){
       var count = pastas.length;
@@ -290,6 +358,60 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
         callback({count: count});
       }
     });
+  }
+
+  /* Inserts a new action into a users history
+   *
+   * arguments: object app, string ip, string name, boolean or string _id
+   */
+  var addUserHistory = function(app, ip, name, _id){
+    if(!app.locals.userHistory[ip])
+      {app.locals.userHistory[ip] = [];}
+    app.locals.userHistory[ip].push({time: (+new Date()), name: name, _id: _id});
+  }
+
+  /* Checks if a user is allowed to vote on a pasta
+   *
+   * arguments: object app, string ip, string name, string _id
+   *
+   * returns: boolean
+   */
+  var allowedToVote = function(app, ip, name, _id){
+    if(app.locals.userHistory[ip]){
+      return _.each(app.locals.userHistory[ip], function(action, i, list){
+        if(action.name==="Vote" && action._id===_id &&  action.time + voteCooldown > (+new Date())){
+          return false;
+        }
+        if(i === list.length){
+          return true;
+        }
+      });
+    }
+    else{
+      return true;
+    }
+  }
+
+  /* Checks if a user is allowed to post a new pasta
+   *
+   * arguments: object app, string ip
+   *
+   * returns: boolean
+   */
+  var allowedToPost = function(app, ip){
+    if(app.locals.userHistory[ip]){
+      return _.each(app.locals.userHistory[ip], function(action, i, list){
+        if(action.name==="Post" && action.time + postCooldown > (+new Date())){
+          return false;
+        }
+        if(i === list.length){
+          return true;
+        }
+      });
+    }
+    else{
+      return true;
+    }
   }
 
 });

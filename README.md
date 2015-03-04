@@ -5,4 +5,4 @@ Searching will start at the start of user input, with the number of possible res
 
 Pastas are cached in memory with the cache being refreshed every few minutes so DB interaction is minimized and search speed increases. Lunr.js is then used to query the copypastas.
 
-##<a href="http://playground.benjaminbaedorf.com:8000">Demo</a>
+##<a href="http://playground.benjaminbaedorf.com:8000">Demo (NSFW Language)</a>

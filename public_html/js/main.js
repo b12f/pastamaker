@@ -55,7 +55,7 @@
 		if(query.length>0){
 			//Set document title
 			$("head title").first().html(originalWindowTitle + ": "+query, "/"+escape(query.replace(/\s/g, "_")));
-			
+
 			//Get pasta JSON
 			$.getJSON("api/pasta/"+query, function(pastas){
 				if($("#search").val().length>0){
@@ -85,11 +85,13 @@
 					//bind clicks on rating links
 					$("a[rel=\"rate\"]").off("click.rate").on("click.rate",function(){
 						var container = $(this).closest("article");
-						var action = $(this).html() === "Good" ? "like" : "dislike";
-						var modifier =  $(this).html() === "Good" ? 1 : -1;
+						var action = $(this).html() === "good" ? "like" : "dislike";
+						var modifier =  action === "like" ? 1 : -1;
 						var id = container.attr("id");
 						$.post("api/pasta/"+id, "action="+action,function(response){
-							container.find("span.points").first().html(parseInt(container.find("span.points").first().html())+modifier);
+							if(response!==false){
+								container.find("span.points").first().html(parseInt(container.find("span.points").first().html())+modifier);
+							}
 						}, 'json');
 					});
 				}
@@ -146,7 +148,7 @@
 		e.stopPropagation();
 		e.preventDefault();
 		var formvals = $(this).serializeArray();
-		
+
 		var noErrors = true;
 		$.each(formvals, function(i, formval){
 			if(formval.value==="" && formval.name!=="tags"){

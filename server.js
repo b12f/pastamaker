@@ -173,9 +173,6 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   router.post('/api/pasta/:query', function(req, res) {
     req.body._id = req.query;
     updatePasta(app, req.body, req.client.remoteAddress, function(result){
-      if(result===false){
-        result = "An error occured.";
-      }
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(result));
     });

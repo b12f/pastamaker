@@ -1,0 +1,83 @@
+<html class="no-js">
+<head>
+  <meta charset="UTF-8">
+  <title><%- locals.title %></title>
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no">
+  <link rel="Shortcut Icon" href="/img/favicon.png" type="image/x-icon"/>
+  <%
+    _.each(stylesheets, function(stylesheet, i){
+        %><link rel="stylesheet" type="text/css" href="<%= stylesheet %>" />
+  <%
+      });
+  %>
+  <script type="text/javascript">
+  <% if(locals.query){ %> var query = "<%- locals.query %>";<% } %>
+    document.getElementsByTagName("html")[0].removeAttribute("class");
+  </script>
+</head>
+<body>
+<div class="container no-js error">Unfortunately, pastamaker needs Javascript to work.</div>
+<div class="container">
+
+  <header id="header" class="row">
+    <div class="sixteen columns"><form action="pasta" name="search" method="get"><input type="search" name="pasta" placeholder="Pastamaker" id="search" value="<% if(locals.query){ %><%- locals.query %><% } %>" /></form></div>
+  </header>
+
+  <main id="pastas">
+    <article id="addItem" class="collapsed">
+      <h2>Start typing to see pastas or <a href="#" rel="add" title="Add more pasta">add more pasta</a></h2>
+      <form name="add" id="addForm">
+        <label for="addTitle">Title <span class="error" id="addTitleError"></span></label>
+        <input type="text" id="addTitle" name="title" placeholder="Navy Seal Pasta" />
+        <label for="addTitle">Tags</label>
+        <input type="text" id="addTags" name="tags" placeholder="4chan /b/" />
+        <label for="addText">Text <span class="error" id="addTextError"></span></label>
+        <textarea name="text" id="addText"></textarea>
+        <label>Font type <span class="error" id="addFontstackError"></span></label>
+        <label for="addSerif"><input type="radio" name="fontstack" value="serif" id="addSerif" checked /> Serif</label>
+        <label for="addSansserif"><input type="radio" name="fontstack" value="sans-serif" id="addSansserif" /> Sans-Serif</label>
+        <label for="addMonospace"><input type="radio" name="fontstack" value="monospace" id="addMonospace" /> Monospace</label>
+        <button type="submit" class="btn" value="submit" id="addSubmit">Submit</button> Due to caching, it can take a couple of minutes for your pasta to show up in results.<span class="error" id="addPastaError"></span>
+      </form>
+    </article>
+    <article class="new">
+      <h2 id="newTitle"></h2>
+      <p id="newText"></p>
+    </article>
+
+    <% if(locals.pastas){
+      _.each(locals.pastas,function(pasta,i){ 
+        var classes = "";
+        if(pasta.fontstack){
+          classes += pasta.fontstack+" ";
+        }
+        %>
+      <article id="pasta <%- pasta.fontstack %>" class="pasta ">
+        <h2><%= pasta.title %></h2>
+        <p><%= pasta.text %></p>
+        <div class="meta">
+          <a href="#" rel="rate">good</a> 
+          <span class="points"><%- pasta.points %></span> 
+          <a href="#" rel="rate">bad</a> 
+          <a href="/<%- pasta._id %>">permalink</a>
+        </div>
+      </article>
+
+  <%  });
+    } %>
+  </main>
+
+</div>
+<footer class="container">
+  <div class="four columns"></div>
+  <div class="four columns"></div>
+  <div class="four columns"></div>
+  <div class="four columns"></div>
+</footer>
+<%
+  _.each(scripts, function(script, i){
+      %><script type="application/javascript" src="<%= script %>"></script>
+<%
+    });
+%>
+</body>

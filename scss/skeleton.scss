@@ -1,0 +1,131 @@
+/**
+ * SASS/SCSS/Compass Transcription of Skeleton Responsive Grid
+ * @author Dennis Thompson <http://www.atomicpages.net>
+ * @copyright Copyright (c) 2014 AtomicPages LLC
+ * @license MIT
+ * @version 2.0.2 
+ */
+
+@import "skeleton/themes/loader"; // sass --update -C skeleton.scss:skeleton.css
+
+/* Add custom styles here */
+.error {
+	color: rgb(181, 0, 0);
+}
+.success {
+	color: rgb(0, 181, 0);
+}
+div.no-js {
+	display: none;
+}
+html.no-js .no-js.error {
+	display: inherit;
+	border-bottom: 1px solid rgb(181, 0, 0);
+	padding: 20px;
+	margin-bottom: 20px;
+}
+html{
+	overflow: auto;
+}
+::-webkit-scrollbar              {
+	background-color: transparent;
+}
+::-webkit-scrollbar-button       {
+	background-color: $font-color;
+}
+::-webkit-scrollbar-track        {
+	background-color: transparent;
+}
+::-webkit-scrollbar-track-piece  {
+	background-color: transparent;
+}
+::-webkit-scrollbar-thumb        {
+	background-color: $font-color;
+}
+#header {
+	margin-top: 3rem;
+}
+#pastas {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start; 
+	align-items: flex-start;
+	align-content: flex-start;
+	article {
+		margin: 10px;
+		padding: 10px;
+		flex-grow: 1;
+		flex-shrink: 1;
+		flex-basis: 50rem;
+		align-self: flex-start;
+		transition: all 0.2s ease-out;
+		&.new {
+			flex-grow: 0;
+			flex-basis: 0px;
+			opacity: 0;
+			max-width: 0px;
+			&.visible {
+				display: block;
+				flex-grow: 1;
+				flex-basis: 40rem;
+				opacity: 1;
+				max-width: 1000px;
+			}
+		}
+		&.monospace *:not(h2) {
+			font-family: $monospace-family;
+		}
+		&.sans-serif *:not(h2) {
+			font-family: $heading-family;
+		}
+		&.collapsed {
+			
+			#addForm {
+				max-height: 0px;
+			}
+		}	
+		&.collapsed:hover{
+			opacity: 1;
+		}
+		p {
+			max-height: 100rem;
+			//max-width: 50rem;
+			overflow-y: auto;
+			overflow-x: none;
+		}
+	}
+}
+#search {
+	@include font-size($font-size * 3.8333);
+	line-height: relative($font-size * 4.1666);
+	margin-bottom: relative($font-size * 1.1666);
+	width: 100%;
+}
+#addForm {
+	max-height: 1000px;
+	overflow: hidden;
+	transition: max-height 0.4s ease-out;
+	input[type=text], textarea {
+		width: 100%;
+	}
+	textarea {
+		min-height: 20rem;
+	}
+}
+
+
+/* MEDIA QUERIES
+ * ------------------------------------------------ */
+/* Smaller than standard #{strip-units($base-width)} (devices and browsers) */
+@media only screen and (max-width: 900px) { 
+	/*#pastas	{
+		article {
+			margin-bottom: 30px !important;
+			p {
+				margin: 0 0 20px 0 !important;
+				margin-width: 100% !important;
+			}
+		}
+	}*/
+}

@@ -1,0 +1,298 @@
+@import "vars";
+
+/* RESET
+ * ------------------------------------------------ */
+@include global-reset;
+
+/* BASIC STYLES
+ * ------------------------------------------------ */
+html {
+	font-size: percentage(strip-units($base-font-size) / 16);
+	overflow-y: scroll;
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+	line-height: 1.2;
+}
+@if($use-global-border-box) {
+	*,
+	*:before,
+	*:after {
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+}
+body {
+	background: $background-color;
+	font: {
+		family: $font-family;
+		weight: normal;
+		style: normal;
+	}
+	@include font-size(14px);
+	line-height: relative(26px);
+	color: $font-color;
+	-webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
+	-webkit-text-size-adjust: 100%;
+}
+
+/* TYPOGRAPHY
+ * ------------------------------------------------ */
+h1, h2, h3, h4, h5, h6 {
+	color: $heading-color;
+	font: {
+		family: $heading-family;
+		weight: normal;
+	}
+}
+h1, h2, h3,
+h4, h5, h6 {
+	a { font-weight: inherit; }
+}
+h1 {
+	@include font-size($font-size * 3.8333);
+	line-height: relative($font-size * 4.1666);
+	margin-bottom: relative($font-size * 1.1666);
+}
+h2 {
+	@include font-size($font-size * 2.9166);
+	line-height: relative($font-size * 3.333);
+	margin-bottom: relative($font-size * 0.833);
+}
+h3 {
+	@include font-size($font-size * 2.333);
+	line-height: relative($font-size * 2.833);
+	margin-bottom: relative($font-size * 0.666);
+}
+h4 {
+	@include font-size($font-size * 1.75);
+	line-height: relative($font-size * 2.5);
+	margin-bottom: relative($font-size * 0.333);
+}
+h5 {
+	@include font-size($font-size * 1.4166);
+	line-height: relative($font-size * 2);
+}
+h6 {
+	@include font-size($font-size * 1.1666);
+	line-height: relative($font-size * 1.75);
+}
+.subheader { color: $font-color; }
+p {
+	margin: 0 0 relative(20px) 0;
+	img { margin: 0; }
+	&.lead {
+		@include font-size($font-size * 1.75);
+		line-height: relative($font-size * 2.25);
+		color: #777;
+	}
+}
+em, i { font-style: italic; }
+strong, b { font-weight: bold; }
+u { text-decoration: underline; }
+small { font-size: 80%; }
+/*	Blockquotes  */
+blockquote, blockquote p {
+	@include font-size($font-size * 1.4166);
+	line-height: relative($font-size * 2);
+	color: #777;
+	font-style: italic;
+}
+blockquote {
+	margin: 0 0 relative(20px);
+	padding: relative(9px) relative(20px) 0 relative(19px);
+	border-left: 1px solid #ddd;
+}
+blockquote cite {
+	display: block;
+	@include font-size($font-size);
+	color: #555;
+	&:before { content: "\2014 \0020"; }
+	a, a:visited { color: #555; }
+}
+hr {
+	border: {
+		style: solid;
+		color: #ddd;
+		width: 1px 0 0;
+	};
+	clear: both;
+	margin: relative(10px) 0 relative(30px);
+	height: 0;
+}
+
+/* LINKS
+ * ------------------------------------------------ */
+a, a:visited {
+	color: $link-color;
+	text-decoration: $link-decoration;
+	outline: 0;
+}
+a:hover, a:focus, a:active { color: $link-hover; }
+p a, p a:visited { line-height: inherit; }
+
+/* LISTS
+ * ------------------------------------------------ */
+ul,
+ol { margin-bottom: relative(20px); }
+ul { list-style: none outside; }
+ol { list-style: decimal; }
+ol, ul.square,
+ul.circle, ul.disc { margin-left: relative(30px); }
+ul.square { list-style: square outside; }
+ul.circle { list-style: circle outside; }
+ul.disc { list-style: disc outside; }
+ul ul, ul ol,
+ol ol, ol ul {
+	margin: {
+		top: relative(4px);
+		right: 0;
+		bottom: relative(5px);
+		left: relative(30px);
+	}
+	font-size: 90%;
+}
+ul ul li, ul ol li,
+ol ol li, ol ul li { margin-bottom: relative(6px); }
+li {
+	line-height: relative(18px);
+	margin-bottom: relative(12px);
+}
+ul.large li { line-height: relative(21px); }
+li p { line-height: relative(21px); }
+
+/* IMAGES
+ * ------------------------------------------------ */
+img.scale-with-grid {
+	max-width: 100%;
+	height: auto;
+}
+
+/* BUTTONS
+ * ------------------------------------------------ */
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+	outline: 0;
+	border: 1px solid #ccc;
+	//@include border-radius(0px);
+	color: #444;
+	display: inline-block;
+	font: {
+		weight: bold;
+		family: $form-font;
+	};
+	@include font-size($font-size - 1);
+	text-decoration: none;
+	cursor: pointer;
+	line-height: normal;
+	padding: relative(8px) relative(10px);
+	background: #ffffff;
+	transition: all 0.2s ease-out;
+	//text-shadow: 0 1px rgba(255, 255, 255, 0.75);
+	&:hover {
+		outline: 0;
+		color: #222;
+		border: 1px solid #888;
+		border: {
+			top: 1px solid #aaa;
+			left: 1px solid #aaa;
+		};
+		background: #f6f6f6;
+	}
+	&:active {
+		border: 1px solid #666;
+		background: #e6e6e6;
+		outline: 0;
+	}
+	&.full-width {
+		width: 100%;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		text-align: center;
+	}
+	&.smaller {
+		@include font-size($font-size - 2);
+		padding: relative(4px) relative(5px);
+	}
+	&.larger {
+		@include font-size($font-size + 2);
+		padding: relative(10px) relative(18px);
+	}
+}
+
+/* Fix for odd Mozilla border & padding issues */
+button,
+input {
+	&::-moz-focus-inner {
+		border: 0;
+		padding: 0;
+	}
+}
+
+/* FORMS
+ * ------------------------------------------------ */
+form { margin-bottom: relative(20px); }
+fieldset { margin-bottom: relative(20px); }
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+input[type="url"],
+input[type="tel"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"],
+input[type="number"],
+textarea,
+select {
+	transition: border 0.2s ease-out;
+	background: transparent;
+	background-color: inherit;
+	border: none;
+	border-bottom: 1px solid $secondary-color;
+	padding: relative(6px) relative(4px);
+	outline: none;
+	font-family: $form-font;
+	@include font-size($font-size + 1);
+	color: #777;
+	margin: 0 0 relative(20px);
+	width: relative(210px);
+	max-width: 100%;
+	display: block;
+	&:hover,
+	&:focus {
+		border-bottom: 1px solid $font-color;
+		color: #444;
+	}
+	&:active {
+		border-bottom: 1px solid $heading-color;
+	}
+}
+select { padding: 0; }
+textarea { min-height: relative(60px); }
+label,
+legend {
+	span {
+		font-weight: normal;
+		@include font-size($font-size + 1);
+		color: #444;
+	}
+	display: block;
+	font-weight: bold;
+	@include font-size($font-size + 1);
+}
+select { width: relative(220px); }
+input[type="checkbox"] { display: inline; }
+
+/* MISC
+ * ------------------------------------------------ */
+.subtract-bottom { margin-bottom: relative(-20px) !important; }
+.remove-bottom { margin-bottom: 0 !important; }
+.half-bottom { margin-bottom: relative(10px) !important; }
+.add-bottom { margin-bottom: relative(20px) !important; }

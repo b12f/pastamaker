@@ -148,6 +148,10 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   ---------------------------------------------- */
   // route middleware that will happen on every request
   router.use(function(req, res, next) {
+    req.ip = req.headers['x-forwarded-for'] ||
+     req.connection.remoteAddress ||
+     req.socket.remoteAddress ||
+     req.connection.socket.remoteAddress;
     res.status(200);
     next();
   });
@@ -174,14 +178,14 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   router.post('/api/pasta/:query', function(req, res) {
     req.body._id = req.query;
-    app.updatePasta(req.body, req.client.remoteAddress, function(result){
+    app.updatePasta(req.body, req.ip, function(result){
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(result));
     });
   });
 
   router.post('/api/pasta/', function(req, res) {
-    app.putPasta(req.body, req.client.remoteAddress, function(err, result){
+    app.putPasta(req.body, req.ip, function(err, result){
       res.setHeader('Content-Type', 'application/json');
       if(err){
         res.status(401);
@@ -292,7 +296,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
             "points": 0,
             "ip": ip};
           collection.insert(doc, function(err, result){
-            app.addUserHistory(app, ip, "Post", pasta.text);
+            app.addUserHistory( ip, "Post", pasta.text);
             callback(err, result);
           });
         }
@@ -326,10 +330,10 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
     var pointsToAdd = params.action==="like" ? 1 : -1;
     var update = {$inc: { points: pointsToAdd }};
     var filter = { _id: new BSON.ObjectID(params._id) };
-    if(app.allowedToVote(app, ip, "Vote", params._id)){
+    if(app.allowedToVote(ip, "Vote", params._id)){
       collection.update(filter, update, function(err, result){
         if(!err){
-          app.addUserHistory(app, ip, "Vote", params._id);
+          app.addUserHistory(ip, "Vote", params._id);
           callback("Updated successfully");
         }
         else{
@@ -383,14 +387,13 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   app.allowedToVote = function(ip, name, _id){
     var app = this;
     if(app.locals.userHistory[ip]){
-      return _.each(app.locals.userHistory[ip], function(action, i, list){
-        if(action.name==="Vote" && action._id===_id &&  action.time + voteCooldown > (+new Date())){
-          return false;
-        }
-        if(i === list.length){
-          return true;
-        }
-      });
+    var allowed = true;
+        _.each(app.locals.userHistory[ip], function(action, i, list){
+            if(action.name==="Vote" && action._id===_id &&  action.time + voteCooldown > (+new Date())){
+                allowed = false;
+            }
+        });
+      return allowed;
     }
     else{
       return true;
@@ -406,14 +409,13 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   app.allowedToPost = function(ip){
     var app = this;
     if(app.locals.userHistory[ip]){
+        var allowed = true;
       return _.each(app.locals.userHistory[ip], function(action, i, list){
         if(action.name==="Post" && action.time + postCooldown > (+new Date())){
-          return false;
-        }
-        if(i === list.length){
-          return true;
+          allowed = false;
         }
       });
+      return allowed;
     }
     else{
       return true;

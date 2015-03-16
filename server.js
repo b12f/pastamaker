@@ -71,7 +71,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    * arguments: function callback
    *
    */
-  var updatePastaCache = function(callback){
+  app.updatePastaCache = function(callback){
+    var app = this;
     app.locals.db.collection("pastas").find().sort({ points: -1 } ).toArray(function(err, pastas){
       app.locals.pastas = pastas;
       app.locals.idx.removeAll();
@@ -90,7 +91,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   /* Cleans the userhistory so we are not keeping more data in memory than we need.
    * All expired actions and empty userhistories are deleted.
    */
-  var cleanUserHistory = function(){
+  app.cleanUserHistory = function(){
+    var app = this;
     var now = (+new Date());
     _.each(app.locals.userHistory, function(history, ip){
       _.each(history, function(action, index){
@@ -116,11 +118,11 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   app.locals.storage = lunr.Store
 
   var cacheUpdateTimer = setInterval(function(){
-    updatePastaCache();
-    cleanUserHistory();
+    app.updatePastaCache();
+    app.cleanUserHistory();
   }, cacheUpdateTime);
 
-  updatePastaCache(function(){
+  app.updatePastaCache(function(){
     //bootstrap the app
     app.listen(port);
     console.log("Listening on port "+port);
@@ -157,14 +159,14 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   });
 
   router.get('/api/stats', function(req, res) {
-    getStats(app, function(stats){
+    app.getStats(function(stats){
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(stats));
     });
   });
 
   router.get('/api/pasta/:query', function(req, res) {
-    getPasta(app, req.query, function(pastas){
+    app.getPasta(req.query, function(pastas){
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(pastas));
     });
@@ -172,14 +174,14 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   router.post('/api/pasta/:query', function(req, res) {
     req.body._id = req.query;
-    updatePasta(app, req.body, req.client.remoteAddress, function(result){
+    app.updatePasta(req.body, req.client.remoteAddress, function(result){
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(result));
     });
   });
 
   router.post('/api/pasta/', function(req, res) {
-    putPasta(app, req.body, req.client.remoteAddress, function(err, result){
+    app.putPasta(req.body, req.client.remoteAddress, function(err, result){
       res.setHeader('Content-Type', 'application/json');
       if(err){
         res.status(401);
@@ -192,7 +194,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   });
 
   router.all('/:query', function(req, res) {
-    getPasta(app, req.query, function(pastas){
+    app.getPasta(req.query, function(pastas){
       var locals = {title: "Pastamaker: "+req.query, pastas: pastas, query: req.query};
       res.render('index.html',
                 { stylesheets: stylesheets, scripts: scripts, locals: locals},
@@ -251,9 +253,10 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * arguments: object app, object pasta, string ip, function callback
    */
-  var putPasta = function(app, pasta, ip, callback){
+  app.putPasta = function(pasta, ip, callback){
+    var app = this;
     var db = app.locals.db;
-    if(!allowedToPost(app, ip)){
+    if(!app.allowedToPost(ip)){
       callback(["Please wait "+(postCooldown/1000)+" seconds between posting."], false);
     }
     else if( typeof pasta.title!=="string"
@@ -289,7 +292,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
             "points": 0,
             "ip": ip};
           collection.insert(doc, function(err, result){
-            addUserHistory(app, ip, "Post", pasta.text);
+            app.addUserHistory(app, ip, "Post", pasta.text);
             callback(err, result);
           });
         }
@@ -301,7 +304,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * arguments: object app, string query, function callback
    */
-  var getPasta = function(app, query, callback){
+  app.getPasta = function(query, callback){
+    var app = this;
     var limit = 10 + 3*(query.length-1)*(query.length-1);
     var pastas = app.locals.idx.search(query).map(function (resultPasta) {
       return app.locals.pastas.filter(function (pasta) {
@@ -315,16 +319,17 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * arguments: object app, object params, string ip, function callback
    */
-  var updatePasta = function(app, params, ip, callback){
+  app.updatePasta = function(params, ip, callback){
+    var app = this;
     var db = app.locals.db;
     var collection = db.collection("pastas");
     var pointsToAdd = params.action==="like" ? 1 : -1;
     var update = {$inc: { points: pointsToAdd }};
     var filter = { _id: new BSON.ObjectID(params._id) };
-    if(allowedToVote(app, ip, "Vote", params._id)){
+    if(app.allowedToVote(app, ip, "Vote", params._id)){
       collection.update(filter, update, function(err, result){
         if(!err){
-          addUserHistory(app, ip, "Vote", params._id);
+          app.addUserHistory(app, ip, "Vote", params._id);
           callback("Updated successfully");
         }
         else{
@@ -342,7 +347,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * arguments: object app, function callback
    */
-  var getStats = function(app, callback){
+  app.getStats = function(callback){
+    var app = this;
     var db = app.locals.db;
     var collection = db.collection("pastas");
     collection.find( {} ).sort( { points: -1 } ).toArray(function(err, pastas){
@@ -361,7 +367,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * arguments: object app, string ip, string name, boolean or string _id
    */
-  var addUserHistory = function(app, ip, name, _id){
+  app.addUserHistory = function(ip, name, _id){
+    var app = this;
     if(!app.locals.userHistory[ip])
       {app.locals.userHistory[ip] = [];}
     app.locals.userHistory[ip].push({time: (+new Date()), name: name, _id: _id});
@@ -373,7 +380,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * returns: boolean
    */
-  var allowedToVote = function(app, ip, name, _id){
+  app.allowedToVote = function(ip, name, _id){
+    var app = this;
     if(app.locals.userHistory[ip]){
       return _.each(app.locals.userHistory[ip], function(action, i, list){
         if(action.name==="Vote" && action._id===_id &&  action.time + voteCooldown > (+new Date())){
@@ -395,7 +403,8 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
    *
    * returns: boolean
    */
-  var allowedToPost = function(app, ip){
+  app.allowedToPost = function(ip){
+    var app = this;
     if(app.locals.userHistory[ip]){
       return _.each(app.locals.userHistory[ip], function(action, i, list){
         if(action.name==="Post" && action.time + postCooldown > (+new Date())){

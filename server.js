@@ -215,7 +215,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
   });
 
   router.all('/', function(req, res) {
-    var locals = {title: "Pastamaker"};
+    var locals = {title: "Pastamaker", cooldowns: {vote: "1 day", post: "2 minutes"}};
     res.render('index.html',
               { stylesheets: stylesheets, scripts: scripts, locals: locals},
               function(err,str) {

@@ -136,3 +136,14 @@ html{
 		min-height: 20rem;
 	}
 }
+footer.container {
+    padding-top: 5rem;
+    padding-bottom: 2rem;
+    opacity: 0.4;
+    -webkit-transition: linear 0.2s all;
+    -o-transition: linear 0.2s all;
+    transition: linear 0.2s all;
+    &:hover {
+        opacity: 1;
+    }
+}

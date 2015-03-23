@@ -1,9 +1,10 @@
+@charset "UTF-8";
 /**
  * SASS/SCSS/Compass Transcription of Skeleton Responsive Grid
  * @author Dennis Thompson <http://www.atomicpages.net>
  * @copyright Copyright (c) 2014 AtomicPages LLC
  * @license MIT
- * @version 2.0.2 
+ * @version 2.0.2
  */
 /* RESET
  * ------------------------------------------------ */
@@ -633,7 +634,6 @@ input[type="checkbox"] {
   width: 0;
   height: 0; }
 
-/* Add custom styles here */
 .error {
   color: #b50000; }
 
@@ -667,6 +667,8 @@ html {
 ::-webkit-scrollbar-thumb {
   background-color: #444; }
 
+/* Main CSS
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
 #header {
   margin-top: 3rem; }
 
@@ -704,8 +706,22 @@ html {
       max-height: 0px; }
     #pastas article.collapsed:hover {
       opacity: 1; }
+    #pastas article.hidden {
+      opacity: 0.4;
+      -webkit-transition: linear 0.2s all;
+      -o-transition: linear 0.2s all;
+      transition: linear 0.2s all; }
+      #pastas article.hidden p {
+        max-height: 0px;
+        -webkit-transition: linear 0.2s all;
+        -o-transition: linear 0.2s all;
+        transition: linear 0.2s all; }
+      #pastas article.hidden:hover {
+        opacity: 0.8; }
+        #pastas article.hidden:hover p {
+          max-height: 10000rem; }
     #pastas article p {
-      max-height: 100rem;
+      max-height: 10000rem;
       overflow-y: auto;
       overflow-x: none; }
 
@@ -724,19 +740,5 @@ html {
     width: 100%; }
   #addForm textarea {
     min-height: 20rem; }
-
-/* MEDIA QUERIES
- * ------------------------------------------------ */
-/* Smaller than standard 98 (devices and browsers) */
-@media only screen and (max-width: 900px) {
-  /*#pastas	{
-  	article {
-  		margin-bottom: 30px !important;
-  		p {
-  			margin: 0 0 20px 0 !important;
-  			margin-width: 100% !important;
-  		}
-  	}
-  }*/ }
 
 /*# sourceMappingURL=css.css.map */

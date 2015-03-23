@@ -199,7 +199,7 @@ MongoClient.connect("mongodb://localhost:27017/pasta", function main (err, db) {
 
   router.all('/:query', function(req, res) {
     app.getPasta(req.query, function(pastas){
-      var locals = {title: "Pastamaker: "+req.query, pastas: pastas, query: req.query};
+      var locals = {title: "Pastamaker: "+req.query, pastas: pastas, query: req.query, cooldowns: {vote: "1 day", post: "2 minutes"}};
       res.render('index.html',
                 { stylesheets: stylesheets, scripts: scripts, locals: locals},
                 function(err,str) {

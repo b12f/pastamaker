@@ -46,19 +46,22 @@
     </article>
 
     <% if(locals.pastas){
-      _.each(locals.pastas,function(pasta,i){ 
+      _.each(locals.pastas,function(pasta,i){
         var classes = "";
         if(pasta.fontstack){
           classes += pasta.fontstack+" ";
         }
+        if(pasta.points<0){
+          classes += "hidden ";
+        }
         %>
-      <article id="pasta <%- pasta.fontstack %>" class="pasta ">
+      <article id="pasta" class="pasta <%- classes %>">
         <h2><%= pasta.title %></h2>
         <p><%= pasta.text %></p>
         <div class="meta">
-          <a href="#" rel="rate">good</a> 
-          <span class="points"><%- pasta.points %></span> 
-          <a href="#" rel="rate">bad</a> 
+          <a href="#" rel="rate">good</a>
+          <span class="points"><%- pasta.points %></span>
+          <a href="#" rel="rate">bad</a>
           <a href="/<%- pasta._id %>">permalink</a>
         </div>
       </article>
@@ -69,10 +72,9 @@
 
 </div>
 <footer class="container">
-  <div class="four columns"></div>
-  <div class="four columns"></div>
-  <div class="four columns"></div>
-  <div class="four columns"></div>
+  <div class="eight columns">I take no responsibility for the content of pastas posted here. Think something shouldn't be here? Downvote it.</div>
+  <div class="four columns">Vote cooldown: <%- locals.cooldowns.vote %>.<br />Post cooldown:  <%- locals.cooldowns.post %>.</div>
+  <div class="four columns"><a href="https://github.com/b12f/pastamaker">Source on Github</a></div>
 </footer>
 <%
   _.each(scripts, function(script, i){

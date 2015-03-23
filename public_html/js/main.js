@@ -69,6 +69,9 @@
 							classes += pasta.fontstack+" ";
 						}
 						if(!pasta.points){pasta.points = 0;}
+                        console.log(pasta.points);
+                        if(pasta.points<0){classes += "hidden ";}
+
 						container.append("<article id=\""+
 							pasta._id
 							+"\" class=\"pasta "+
@@ -173,4 +176,5 @@
 			container.children(".pasta").remove();
 		}
 	});
+    console.log("Like this? I am currently looking for work.");
 })();

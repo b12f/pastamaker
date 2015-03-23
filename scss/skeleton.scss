@@ -3,12 +3,11 @@
  * @author Dennis Thompson <http://www.atomicpages.net>
  * @copyright Copyright (c) 2014 AtomicPages LLC
  * @license MIT
- * @version 2.0.2 
+ * @version 2.0.2
  */
 
-@import "skeleton/themes/loader"; // sass --update -C skeleton.scss:skeleton.css
+@import "skeleton/themes/loader";
 
-/* Add custom styles here */
 .error {
 	color: rgb(181, 0, 0);
 }
@@ -42,6 +41,10 @@ html{
 ::-webkit-scrollbar-thumb        {
 	background-color: $font-color;
 }
+
+/* Main CSS
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
 #header {
 	margin-top: 3rem;
 }
@@ -49,7 +52,7 @@ html{
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
-	justify-content: flex-start; 
+	justify-content: flex-start;
 	align-items: flex-start;
 	align-content: flex-start;
 	article {
@@ -80,17 +83,34 @@ html{
 			font-family: $heading-family;
 		}
 		&.collapsed {
-			
+
 			#addForm {
 				max-height: 0px;
 			}
-		}	
+		}
 		&.collapsed:hover{
 			opacity: 1;
 		}
+        &.hidden {
+            opacity: 0.4;
+            -webkit-transition: linear 0.2s all;
+            -o-transition: linear 0.2s all;
+            transition: linear 0.2s all;
+            p {
+                max-height: 0px;
+                -webkit-transition: linear 0.2s all;
+                -o-transition: linear 0.2s all;
+                transition: linear 0.2s all;
+            }
+            &:hover {
+                opacity: 0.8;
+                p {
+                    max-height: 10000rem;
+                }
+            }
+        }
 		p {
-			max-height: 100rem;
-			//max-width: 50rem;
+			max-height: 10000rem;
 			overflow-y: auto;
 			overflow-x: none;
 		}
@@ -112,20 +132,4 @@ html{
 	textarea {
 		min-height: 20rem;
 	}
-}
-
-
-/* MEDIA QUERIES
- * ------------------------------------------------ */
-/* Smaller than standard #{strip-units($base-width)} (devices and browsers) */
-@media only screen and (max-width: 900px) { 
-	/*#pastas	{
-		article {
-			margin-bottom: 30px !important;
-			p {
-				margin: 0 0 20px 0 !important;
-				margin-width: 100% !important;
-			}
-		}
-	}*/
 }

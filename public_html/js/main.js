@@ -69,7 +69,7 @@
 							classes += pasta.fontstack+" ";
 						}
 						if(!pasta.points){pasta.points = 0;}
-                        if(pasta.points<10){
+                        if(pasta.points<-10){
                             classes += "invisible ";
                         }
                         else if(pasta.points<0){

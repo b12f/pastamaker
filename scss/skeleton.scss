@@ -109,6 +109,9 @@ html{
                 }
             }
         }
+        &.invisible {
+            display: none;
+        }
 		p {
 			max-height: 10000rem;
 			overflow-y: auto;

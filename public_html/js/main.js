@@ -69,8 +69,12 @@
 							classes += pasta.fontstack+" ";
 						}
 						if(!pasta.points){pasta.points = 0;}
-                        console.log(pasta.points);
-                        if(pasta.points<0){classes += "hidden ";}
+                        if(pasta.points<10){
+                            classes += "invisible ";
+                        }
+                        else if(pasta.points<0){
+                            classes += "hidden ";
+                        }
 
 						container.append("<article id=\""+
 							pasta._id

@@ -720,6 +720,8 @@ html {
         opacity: 0.8; }
         #pastas article.hidden:hover p {
           max-height: 10000rem; }
+    #pastas article.invisible {
+      display: none; }
     #pastas article p {
       max-height: 10000rem;
       overflow-y: auto;

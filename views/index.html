@@ -49,10 +49,13 @@
       _.each(locals.pastas,function(pasta,i){
         var classes = "";
         if(pasta.fontstack){
-          classes += pasta.fontstack+" ";
+            classes += pasta.fontstack+" ";
         }
-        if(pasta.points<0){
-          classes += "hidden ";
+        if(pasta.points<10){
+            classes += "invisible ";
+        }
+        else if(pasta.points<0){
+            classes += "hidden ";
         }
         %>
       <article id="pasta" class="pasta <%- classes %>">
